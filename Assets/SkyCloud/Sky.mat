@@ -123,7 +123,7 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _Dithering: 1
-    - _DitheringIntensity: 4
+    - _DitheringIntensity: 7.75
     - _DstBlend: 0
     - _Emptiness: 0.341
     - _Exposure: 1.3

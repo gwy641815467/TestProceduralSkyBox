@@ -65,7 +65,7 @@
                 worldPos = normalize(worldPos);
 
                 float4 color = 0;
-                //color.r= abs(worldPos.x/1);
+                color.r= abs(worldPos.x/1);
                 //color.g= abs(worldPos.y/1);
                 //color.b= abs(worldPos.z/1);
                 return color;

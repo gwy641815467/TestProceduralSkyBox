@@ -2,61 +2,8 @@
 {
     Properties
     {
-        [Header(Stars Settings)]
-        _Stars ("Stars Texture", 2D) = "black" { }
-        _StarsCutoff ("Stars Cutoff", Range(0, 1)) = 0.08
-        _StarsSpeed ("Stars Move Speed", Range(0, 1)) = 0.3
-        _StarsSkyColor ("Stars Sky Color", Color) = (0.0, 0.2, 0.1, 1)
-
-        [Header(Horizon Settings)]
-        _OffsetHorizon ("Horizon Offset", Range(-1, 1)) = 0
-        //地平线强度
-        _HorizonIntensity ("Horizon Intensity", Range(0, 10)) = 3.3
-        //日落颜色
-        _SunSet ("Sunset/Rise Color", Color) = (1, 0.8, 1, 1)
-        _HorizonColorDay ("Day Horizon Color", Color) = (0, 0.8, 1, 1)
-        _HorizonColorNight ("Night Horizon Color", Color) = (0, 0.8, 1, 1)
-
-        [Header(Sun Settings)]
         _SunColor ("Sun Color", Color) = (1, 1, 1, 1)
-        _SunRadius ("Sun Radius", Range(0, 2)) = 0.1
-
-        [Header(Moon Settings)]
-        _MoonColor ("Moon Color", Color) = (1, 1, 1, 1)
-        _MoonRadius ("Moon Radius", Range(0, 2)) = 0.15
-        _MoonOffset ("Moon Crescent", Range(-1, 1)) = -0.1
-
-        [Header(Day Sky Settings)]
-        _DayTopColor ("Day Sky Color Top", Color) = (0.4, 1, 1, 1)
-        _DayBottomColor ("Day Sky Color Bottom", Color) = (0, 0.8, 1, 1)
-
-        [Header(Main Cloud Settings)]
-        _BaseNoise ("Base Noise", 2D) = "black" { }
-        _Distort ("Distort", 2D) = "black" { }
-        _SecNoise ("Secondary Noise", 2D) = "black" { }
-        _BaseNoiseScale ("Base Noise Scale", Range(0, 1)) = 0.2
-        _DistortScale ("Distort Noise Scale", Range(0, 1)) = 0.06
-        _SecNoiseScale ("Secondary Noise Scale", Range(0, 1)) = 0.05
-        _Distortion ("Extra Distortion", Range(0, 1)) = 0.1
-        _Speed ("Movement Speed", Range(0, 10)) = 1.4
-        _CloudCutoff ("Cloud Cutoff", Range(0, 1)) = 0.3
-        _Fuzziness ("Cloud Fuzziness", Range(0, 5)) = 0.04
-        _FuzzinessUnder ("Cloud Fuzziness Under", Range(0, 1)) = 0.01
-        [Toggle(FUZZY)] _FUZZY ("Extra Fuzzy clouds", Float) = 1
-
-        [Header(Day Clouds Settings)]
-        _CloudColorDayEdge ("Clouds Edge Day", Color) = (1, 1, 1, 1)
-        _CloudColorDayMain ("Clouds Main Day", Color) = (0.8, 0.9, 0.8, 1)
-        _CloudColorDayUnder ("Clouds Under Day", Color) = (0.6, 0.7, 0.6, 1)
-        _Brightness ("Cloud Brightness", Range(1, 10)) = 2.5
-        [Header(Night Sky Settings)]
-        _NightTopColor ("Night Sky Color Top", Color) = (0, 0, 0, 1)
-        _NightBottomColor ("Night Sky Color Bottom", Color) = (0, 0, 0.2, 1)
-
-        [Header(Night Clouds Settings)]
-        _CloudColorNightEdge ("Clouds Edge Night", Color) = (0, 1, 1, 1)
-        _CloudColorNightMain ("Clouds Main Night", Color) = (0, 0.2, 0.8, 1)
-        _CloudColorNightUnder ("Clouds Under Night", Color) = (0, 0.2, 0.6, 1)
+        _SunRadius ("Sun Radius", float) = 0
     }
     SubShader
     {
@@ -110,30 +57,56 @@
                 return o;
             }
 
+            float3 getViewDir(float3 worldPos)
+            {
+                float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - worldPos.xyz);
+                return viewDirection;
+            }
+
+            float remap(float inValue, float2 inMinMax, float2 outMinMax)
+            {
+                //if (inValue < inMinMax.x)
+                //{
+                //    return inMinMax.x;
+                //}
+                //if (inValue > inMinMax.y)
+                //{
+                //    return inMinMax.y;
+                //}
+                float result = outMinMax.x + (inValue - inMinMax.x) * (outMinMax.y - outMinMax.y) / (inMinMax.y - inMinMax.x);
+                return result;
+            }
+
             fixed4 frag(v2f i) : SV_Target
             {
-                float4 col = 0;
-                float y = i.uv.z;
-                if (y > 0)
-                {
-                    col = float4(y / 1, 0, 0, 1);
-                }
-                else
-                {
-                    col = float4(0, abs(y / 1), 0, 1);
-                }
-                //return col;
-                // sun 默认_WorldSpaceLightPos0为太阳坐标
-                float3 lightPos = normalize(_WorldSpaceLightPos0 + float3(0, 0, 0));
-                float sun = distance(i.uv.xyz, lightPos);
-                float sunRamp = 0.05;
-                float sunDisc = 1 - (sun / _SunRadius);
-                sunDisc = saturate(sunDisc * 50);
+                //太阳的位置
+                float3 sunDir = -1 * _WorldSpaceLightPos0;
+                float sunRadiusMin = 0;
+                float sunRadiusMax = 0.1;
 
-                float3 sunColor = sunDisc * float3(1, 0, 0);
+                sunDir = normalize(sunDir);
+                float3 viewDir = normalize(getViewDir(i.worldPos));
+                //太阳和视角方向夹角
+                float sunAngle = dot(sunDir, viewDir);
+                sunAngle = clamp(sunAngle, 0, 1);
+
+                sunRadiusMin = min(sunRadiusMin, sunRadiusMax);
+                sunRadiusMax = max(sunRadiusMin, sunRadiusMax);
+
+                sunRadiusMin *= sunRadiusMin;
+                sunRadiusMax *= sunRadiusMax;
+
+                sunRadiusMin = 1 - sunRadiusMin;
+                sunRadiusMax = 1 - sunRadiusMax;
+
+                float sunOut =remap(sunAngle, float2(1, 0.99), float2(1, 0));
+                //-1
+                sunOut = clamp(sunOut, 0, 1);
+                sunOut = pow(sunOut, 5);
+                float3 sunColor = _SunColor.rgb * sunOut * 2;
 
                 float3 combined = sunColor;
-                return float4(sunDisc, 0, 0, 1);
+                return float4(combined, 1);
             }
             ENDCG
         }
