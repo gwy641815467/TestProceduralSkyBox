@@ -1,0 +1,7 @@
+*.csproj
+*.sln
+.vs/
+Assets/ShaderlabVS/
+Library/
+Logs/
+obj/
