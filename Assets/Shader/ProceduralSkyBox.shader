@@ -65,14 +65,6 @@
 
             float remap(float inValue, float2 inMinMax, float2 outMinMax)
             {
-                //if (inValue < inMinMax.x)
-                //{
-                //    return inMinMax.x;
-                //}
-                //if (inValue > inMinMax.y)
-                //{
-                //    return inMinMax.y;
-                //}
                 float result = outMinMax.x + (inValue - inMinMax.x) * (outMinMax.y - outMinMax.y) / (inMinMax.y - inMinMax.x);
                 return result;
             }
@@ -99,14 +91,14 @@
                 sunRadiusMin = 1 - sunRadiusMin;
                 sunRadiusMax = 1 - sunRadiusMax;
 
-                float sunOut =remap(sunAngle, float2(1, 0.99), float2(1, 0));
+                float sunOut = remap(1, float2(-1, 1), float2(0.5, 1));
                 //-1
-                sunOut = clamp(sunOut, 0, 1);
-                sunOut = pow(sunOut, 5);
+                //sunOut = clamp(sunOut, 0, 1);
+                //sunOut = pow(sunOut, 5);
                 float3 sunColor = _SunColor.rgb * sunOut * 2;
 
                 float3 combined = sunColor;
-                return float4(combined, 1);
+                return float4(sunOut, 0, 0, 1);
             }
             ENDCG
         }
